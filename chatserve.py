@@ -12,7 +12,7 @@ def serverAddress(argv):
         print >> sys.stderr, "[chatserve] ERROR! Correct format 'chatserve [port]'"
         # exit 2 for command line syntax errors
         sys.exit(2)
-    ip = 'localhost'
+    ip = socket.gethostbyname(socket.gethostname())
     port = int(sys.argv[1])
     if DEBUG:
         print >> sys.stderr, '[serverAddress()] %s:%d' % (ip, port)
@@ -30,8 +30,11 @@ def socketBind(sock, ip, port):
     """
     Binds IP and Port to Socket
     """
-    server_address = (ip, port)
-    sock.bind(server_address)
+    try:
+        sock.bind((ip, port))
+    except:
+        print >> sys.stderr, '[chatserve] ERROR binding to localhost port'
+        sys.exit(1)
     return sock
 
 
@@ -42,6 +45,8 @@ def socketOpen(argv):
     ip, port = serverAddress(argv)
     sock = socketInit()
     sock = socketBind(sock, ip, port)
+    if DEBUG:
+        print >> sys.stderr, '[socketOpen()] socket is bound'
     return sock
 
 
@@ -49,7 +54,9 @@ def socketListen(sock):
     """
     Listens on Socket Port
     """
-    sock.listen(1)
+    sock.listen(10)
+    if DEBUG:
+        print >> sys.stderr, '[socketListen()] listening for incoming connections'
     while True:
         client_connection, client_address = sock.accept()
         response = socketConnection(client_connection, client_address)
@@ -67,7 +74,7 @@ def socketConnection(connection, address):
     try:
         if DEBUG:
             # print to stderr in case of output redirect
-            sys.stderr.write('TCP connection request from %s...' % client_addr)
+            sys.stderr.write('TCP connection request from %s:%d' % (str(address[0]), address[1]))
         while True:
             client_data = connection.recv(4096)
             if client_data:
