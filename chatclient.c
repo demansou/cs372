@@ -10,6 +10,9 @@
 
 #define TEST 1
 
+// global variable because
+char *userName = NULL;
+
 char **connectionAddress(int argc, char *argv[])
 {
 	if(argc != 3)
@@ -17,7 +20,7 @@ char **connectionAddress(int argc, char *argv[])
 		fprintf(stderr, "[chatclient] ERROR! Correct format 'chatclient [server] [port]'\n");
 		exit(2);
 	}
-	char **connection_address = (char **)calloc(2, sizeof(char *));
+	char **connection_address = (char **)calloc((size_t)2, sizeof(char *));
 	connection_address[0] = argv[1];
 	connection_address[1] = argv[2];
 	fprintf(stderr, "[connectionAddress()] server connection: %s:%d\n", connection_address[0], atoi(connection_address[1]));
@@ -46,17 +49,41 @@ void socketConnect(int sockfd, char **connection_address)
 	if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
 		fprintf(stderr, "[chatclient] ERROR connecting to server port...\n");
+		close(sockfd);
 		exit(1);
 	}
 	return;
 }
 
+void makeUserName()
+{
+	userName = (char *)calloc(16, sizeof(char));
+	fprintf(stderr, "Please enter a username (Max 12 characters): ");
+	fgets(userName, 13, stdin);
+	strtok(userName, "\n");
+	strcat(userName, ": ");
+#if TEST
+	fprintf(stderr, "[DEBUG] Username: %s\n", userName);
+#endif
+	return;
+}
+
+char *getUserName()
+{
+	return userName;
+}
+
 void socketHandshake(int sockfd, char **connection_address)
 {
-	size_t message_length = (size_t)strlen(connection_address[1]);
-	if(write(sockfd, connection_address[1], message_length) < 0)
+	size_t messageLength = (size_t)strlen(connection_address[1]) + (size_t)strlen(userName);
+	char *handshakeMessage = NULL;
+	handshakeMessage = (char *)calloc(messageLength, sizeof(char));
+	strcpy(handshakeMessage, getUserName());
+	strcat(handshakeMessage, connection_address[1]);
+	if(write(sockfd, handshakeMessage, messageLength) < 0)
 	{
 		fprintf(stderr, "[chatclient] ERROR handshaking with server...\n");
+		close(sockfd);
 		exit(1);
 	}
 	return;
@@ -64,7 +91,7 @@ void socketHandshake(int sockfd, char **connection_address)
 
 int socketOpen(int argc, char *argv[])
 {
-	char **connection_address = (char **)calloc(2, sizeof(char *));
+	char **connection_address = (char **)calloc((size_t)2, sizeof(char *));
 	connection_address = connectionAddress(argc, argv);
 #if TEST
 	fprintf(stderr, "[DEBUG] creating socket...\n");
@@ -75,14 +102,97 @@ int socketOpen(int argc, char *argv[])
 #endif
 	socketConnect(sockfd, connection_address);
 #if TEST
+	fprintf(stderr, "[DEBUG] getting username...\n");
+#endif
+	makeUserName();
+#if TEST
 	fprintf(stderr, "[DEBUG] handshaking with server...\n");
 #endif
 	socketHandshake(sockfd, connection_address);
 	return sockfd;
 }
 
+char *readMessage(int sockfd)
+{
+	int messageLength = 0;
+	char *serverMessage = NULL;
+	if(read(sockfd, &messageLength, sizeof(int)) < 0)
+	{
+		fprintf(stderr, "[chatclient] ERROR reading message size from server...\n");
+		close(sockfd);
+		exit(1);
+	}
+#if TEST
+	fprintf(stderr, "[DEBUG] message size from server: %d\n", messageLength);
+#endif
+	serverMessage = (char *)calloc((size_t)messageLength, sizeof(char));
+	if(read(sockfd, serverMessage, (size_t)messageLength) < 0)
+	{
+		fprintf(stderr, "[chatclient] ERROR reading message from server...\n");
+		close(sockfd);
+		exit(1);
+	}
+	return serverMessage;
+}
+
+char *writeMessage(int sockfd)
+{
+	size_t messageSize;
+	char *clientMessage = NULL;
+	char *userInput = NULL;
+	// messages can be of length 64
+	userInput = (char *)calloc(64, sizeof(char));
+	fprintf(stderr, "%s", userName);
+	fgets(userInput, sizeof(userInput) - 1, stdin);
+	strtok(userInput, "\n");
+	messageSize = strlen(userName) + strlen(userInput);
+	clientMessage = (char *)calloc(messageSize, sizeof(char));
+	strcpy(clientMessage, userName);
+	strcat(clientMessage, userInput);
+	if(write(sockfd, &messageSize, sizeof(size_t)) < 0)
+	{
+		fprintf(stderr, "[chatclient] ERROR sending message size to server...\n");
+		close(sockfd);
+		exit(1);
+	}
+	return clientMessage;
+}
+
+void socketConnection(sockfd)
+{
+	char *serverMessage = NULL;
+	char *clientMessage = NULL;
+	while(1)
+	{
+		serverMessage = readMessage(sockfd);
+#if TEST
+		fprintf(stderr, "[DEBUG] server message: %s\n", serverMessage);
+#endif
+		if(strcmp(serverMessage, "SERVER: \\quit") == 0)
+		{
+			fprintf(stderr, "[chatclient] SERVER has closed the chat connection...\n");
+			break;
+		}
+		printf("%s\n", serverMessage);
+		free(serverMessage);
+		clientMessage = writeMessage(sockfd);
+#if TEST
+		fprintf(stderr, "[DEBUG] client message: %s\n", clientMessage);
+#endif
+		if(strcmp(clientMessage, "\\quit") == 0)
+		{
+			fprintf(stderr, "[chatclient] CLIENT has closed the chat connection...\n");
+			break;
+		}
+		free(clientMessage);
+	}
+	close(sockfd);
+	return;
+}
+
 int main(int argc, char *argv[])
 {
 	int sockfd = socketOpen(argc, argv);
+	socketConnection(sockfd);
 	return 0;
 }

@@ -16,7 +16,7 @@ def serverAddress(argv):
     ip = socket.gethostbyname(socket.gethostname())
     port = int(sys.argv[1])
     if TEST:
-        print >> sys.stderr, '[serverAddress()] %s:%d' % (ip, port)
+        print >> sys.stderr, '[DEBUG] %s:%d' % (ip, port)
     return ip, port
 
 
@@ -47,7 +47,7 @@ def socketOpen(argv):
     sock = socketInit()
     sock = socketBind(sock, ip, port)
     if TEST:
-        print >> sys.stderr, '[socketOpen()] socket is bound'
+        print >> sys.stderr, '[DEBUG] socket is bound'
     return sock
 
 
@@ -55,9 +55,9 @@ def socketListen(sock):
     """
     Listens on Socket Port
     """
-    sock.listen(10)
+    sock.listen(1)
     if TEST:
-        print >> sys.stderr, '[socketListen()] listening for incoming connections'
+        print >> sys.stderr, '[DEBUG] listening for incoming connections'
     while True:
         client_connection, client_address = sock.accept()
         response = socketConnection(client_connection, client_address)
@@ -75,15 +75,20 @@ def socketConnection(connection, address):
     try:
         if TEST:
             # print to stderr in case of output redirect
-            sys.stderr.write('TCP connection request from %s:%d' % (str(address[0]), address[1]))
+            print >> sys.stderr, 'TCP connection request from %s:%d' % (str(address[0]), address[1])
         while True:
-            client_data = connection.recv(4096)
+            client_data = connection.recv(32)
             if client_data:
-                print("%s" % client_data)
+                print("%s" % str(client_data))
                 server_data = raw_input('Server reply: ')
                 server_data = 'SERVER: ' + server_data
-                connection.sendall(server_data)
-                if re.match(r'\Quit$', client_data) or re.match(r'\Quit$', server_data):
+		message_size = len(server_data)
+		if TEST:
+			print('[DEBUG] message size: %d' % message_size)
+			print('[DEBUG] string to send: %s' % server_data)
+		connection.send(str(message_size))
+                connection.send(server_data)
+                if re.match(r'\quit$', client_data) or re.match(r'\quit$', server_data):
                     print >> sys.stderr, 'TCP connection closing'
                     connection.close()
                     return -1
