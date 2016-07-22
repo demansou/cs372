@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 
-#define DEBUG 1
+#define TEST 1
 
 char **connectionAddress(int argc, char *argv[])
 {
@@ -20,9 +20,7 @@ char **connectionAddress(int argc, char *argv[])
 	char **connection_address = (char **)calloc(2, sizeof(char *));
 	connection_address[0] = argv[1];
 	connection_address[1] = argv[2];
-#if DEBUG
-	fprintf(stderr, "[connectionAddress()] server connect: %s:%d\n", connection_address[0], atoi(connection_address[1]));
-#endif
+	fprintf(stderr, "[connectionAddress()] server connection: %s:%d\n", connection_address[0], atoi(connection_address[1]));
 	return connection_address;
 }
 
