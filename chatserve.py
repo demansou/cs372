@@ -1,7 +1,8 @@
 import sys
 import socket
+import re
 
-DEBUG = True
+TEST = True
 
 
 def serverAddress(argv):
@@ -14,7 +15,7 @@ def serverAddress(argv):
         sys.exit(2)
     ip = socket.gethostbyname(socket.gethostname())
     port = int(sys.argv[1])
-    if DEBUG:
+    if TEST:
         print >> sys.stderr, '[serverAddress()] %s:%d' % (ip, port)
     return ip, port
 
@@ -45,7 +46,7 @@ def socketOpen(argv):
     ip, port = serverAddress(argv)
     sock = socketInit()
     sock = socketBind(sock, ip, port)
-    if DEBUG:
+    if TEST:
         print >> sys.stderr, '[socketOpen()] socket is bound'
     return sock
 
@@ -55,7 +56,7 @@ def socketListen(sock):
     Listens on Socket Port
     """
     sock.listen(10)
-    if DEBUG:
+    if TEST:
         print >> sys.stderr, '[socketListen()] listening for incoming connections'
     while True:
         client_connection, client_address = sock.accept()
@@ -72,21 +73,23 @@ def socketConnection(connection, address):
     Establishes TCP connection with connection data and client address
     """
     try:
-        if DEBUG:
+        if TEST:
             # print to stderr in case of output redirect
             sys.stderr.write('TCP connection request from %s:%d' % (str(address[0]), address[1]))
         while True:
             client_data = connection.recv(4096)
             if client_data:
                 print("%s" % client_data)
-                server_data = input('Server reply: ')
+                server_data = raw_input('Server reply: ')
                 server_data = 'SERVER: ' + server_data
                 connection.sendall(server_data)
                 if re.match(r'\Quit$', client_data) or re.match(r'\Quit$', server_data):
                     print >> sys.stderr, 'TCP connection closing'
-                    break
+                    connection.close()
+                    return -1
     finally:
         connection.close()
+    return 0
 
 
 def main(argv):
