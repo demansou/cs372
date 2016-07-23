@@ -5,7 +5,8 @@
  * Description: Connects to a socket.
  *              If connection is established, allows chat between
  *              client and server. A '\quit' message from either
- *              client or server will close chat connection.
+ *              client or server will close chat connection
+ * Sources: Modified from CS344 encrypt/decrypt project..
  ********************************************************************************/
 
 #include <stdlib.h>

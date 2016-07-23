@@ -6,6 +6,9 @@ Description: Binds to port and listens for client connection request.
              If connection is established, allows chat between client
              and server. If client requests to close connetion with
              '\quit', server will listen for other connections.
+Sources: Program was created by altering the code from CS344's encryption/decryption
+         project from C to Python. Used stackoverflow and Python manual as resources
+         to convert syntax to Python.
 """
 import sys
 import socket
