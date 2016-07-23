@@ -89,7 +89,7 @@ void socketHandshake(int sockfd, char **connection_address)
 	size_t messageLength = (size_t)strlen(connection_address[1]) + (size_t)strlen(userName);
 	char *handshakeMessage = NULL;
 	handshakeMessage = (char *)calloc(messageLength, sizeof(char));
-	strcpy(handshakeMessage, getUserName());
+	strcpy(handshakeMessage, userName);
 	strcat(handshakeMessage, connection_address[1]);
 	if(write(sockfd, handshakeMessage, messageLength) < 0)
 	{
