@@ -23,7 +23,7 @@ char **connectionAddress(int argc, char *argv[])
 	char **connection_address = (char **)calloc((size_t)2, sizeof(char *));
 	connection_address[0] = argv[1];
 	connection_address[1] = argv[2];
-	fprintf(stderr, "[connectionAddress()] server connection: %s:%d\n", connection_address[0], atoi(connection_address[1]));
+	fprintf(stderr, "Client attempting to connect to: %s:%d\n", connection_address[0], atoi(connection_address[1]));
 	return connection_address;
 }
 
@@ -114,19 +114,9 @@ int socketOpen(int argc, char *argv[])
 
 char *readMessage(int sockfd)
 {
-	int messageLength = 0;
 	char *serverMessage = NULL;
-	if(read(sockfd, &messageLength, sizeof(int)) < 0)
-	{
-		fprintf(stderr, "[chatclient] ERROR reading message size from server...\n");
-		close(sockfd);
-		exit(1);
-	}
-#if TEST
-	fprintf(stderr, "[DEBUG] message size from server: %d\n", messageLength);
-#endif
-	serverMessage = (char *)calloc((size_t)messageLength, sizeof(char));
-	if(read(sockfd, serverMessage, (size_t)messageLength) < 0)
+	serverMessage = (char *)calloc((size_t)128, sizeof(char));
+	if(read(sockfd, serverMessage, (size_t)128) < 0)
 	{
 		fprintf(stderr, "[chatclient] ERROR reading message from server...\n");
 		close(sockfd);
@@ -137,19 +127,19 @@ char *readMessage(int sockfd)
 
 char *writeMessage(int sockfd)
 {
-	size_t messageSize;
 	char *clientMessage = NULL;
 	char *userInput = NULL;
-	// messages can be of length 64
-	userInput = (char *)calloc(64, sizeof(char));
+	size_t inputSize = 112;
+	// messages can be of length 128 including username 
+	userInput = (char *)calloc(112, sizeof(char));
 	fprintf(stderr, "%s", userName);
-	fgets(userInput, sizeof(userInput) - 1, stdin);
+	getline(&userInput, &inputSize, stdin);
+	//fgets(userInput, sizeof(userInput) - 1, stdin);
 	strtok(userInput, "\n");
-	messageSize = strlen(userName) + strlen(userInput);
-	clientMessage = (char *)calloc(messageSize, sizeof(char));
+	clientMessage = (char *)calloc((size_t)128, sizeof(char));
 	strcpy(clientMessage, userName);
 	strcat(clientMessage, userInput);
-	if(write(sockfd, &messageSize, sizeof(size_t)) < 0)
+	if(write(sockfd, clientMessage, (size_t)128) < 0)
 	{
 		fprintf(stderr, "[chatclient] ERROR sending message size to server...\n");
 		close(sockfd);
@@ -168,9 +158,10 @@ void socketConnection(sockfd)
 #if TEST
 		fprintf(stderr, "[DEBUG] server message: %s\n", serverMessage);
 #endif
-		if(strcmp(serverMessage, "SERVER: \\quit") == 0)
+		if(strstr(serverMessage, "\\quit") != NULL)
 		{
 			fprintf(stderr, "[chatclient] SERVER has closed the chat connection...\n");
+			free(serverMessage);
 			break;
 		}
 		printf("%s\n", serverMessage);
@@ -179,9 +170,10 @@ void socketConnection(sockfd)
 #if TEST
 		fprintf(stderr, "[DEBUG] client message: %s\n", clientMessage);
 #endif
-		if(strcmp(clientMessage, "\\quit") == 0)
+		if(strstr(clientMessage, "\\quit") != NULL)
 		{
 			fprintf(stderr, "[chatclient] CLIENT has closed the chat connection...\n");
+			free(clientMessage);
 			break;
 		}
 		free(clientMessage);
