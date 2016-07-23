@@ -37,7 +37,13 @@ python chatserve.py [listening port]
 
 ### Quit
 
-Once connection established, respond to client with '\quit'. Can also use Ctrl+C to kill program.
+Once connection established, respond to client with
+
+```
+'\quit'
+```
+
+Can also use Ctrl+C to kill program.
 
 ## README.md
 
