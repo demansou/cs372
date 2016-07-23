@@ -131,8 +131,8 @@ int socketOpen(int argc, char *argv[])
 char *readMessage(int sockfd)
 {
 	char *serverMessage = NULL;
-	serverMessage = (char *)calloc((size_t)128, sizeof(char));
-	if(read(sockfd, serverMessage, (size_t)128) < 0)
+	serverMessage = (char *)calloc((size_t)500, sizeof(char));
+	if(read(sockfd, serverMessage, (size_t)500) < 0)
 	{
 		fprintf(stderr, "[chatclient] ERROR reading message from server...\n");
 		close(sockfd);
@@ -146,17 +146,17 @@ char *writeMessage(int sockfd)
 {
 	char *clientMessage = NULL;
 	char *userInput = NULL;
-	size_t inputSize = 112;
-	// messages can be of length 128 including username 
-	userInput = (char *)calloc(112, sizeof(char));
+	size_t inputSize = 484;
+	// messages can be of length 500 including username 
+	userInput = (char *)calloc(484, sizeof(char));
 	fprintf(stderr, "%s", userName);
 	getline(&userInput, &inputSize, stdin);
 	//fgets(userInput, sizeof(userInput) - 1, stdin);
 	strtok(userInput, "\n");
-	clientMessage = (char *)calloc((size_t)128, sizeof(char));
+	clientMessage = (char *)calloc((size_t)500, sizeof(char));
 	strcpy(clientMessage, userName);
 	strcat(clientMessage, userInput);
-	if(write(sockfd, clientMessage, (size_t)128) < 0)
+	if(write(sockfd, clientMessage, (size_t)500) < 0)
 	{
 		fprintf(stderr, "[chatclient] ERROR sending message size to server...\n");
 		close(sockfd);

@@ -83,7 +83,7 @@ def getMessage(connection):
     Listens for data from client. Collects received client data.
     Returns client data.
     """
-    client_message = connection.recv(128).decode()
+    client_message = connection.recv(500).decode()
     if not client_message:
         print >> sys.stderr, '[chatserve] ERROR recieving client data...'
         sys.exit(1)
@@ -95,7 +95,7 @@ def sendMessage(connection):
     Gathers user input to send to client and sends message.
     Returns user input.
     """
-    user_input = raw_input('SERVER: ')[:120]
+    user_input = raw_input('SERVER: ')[:492]
     server_message = 'SERVER: ' + user_input
     connection.send(server_message)
     return server_message
