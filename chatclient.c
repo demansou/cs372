@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 
-#define TEST 1
+#define TEST 0
 
 // global variable because
 char *userName = NULL;
