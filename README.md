@@ -6,11 +6,15 @@ Class work for CS372 Computer Networks
 Written in C. This program connects to chatserve.py and can send/receive messages once a connection is established. Can connect to any server with IPv4 address and server port in command line argument
 
 ### Compile
-```c
+
+```
 gcc -o chatclient chatclient.c
 ```
 
 ### Usage
+
+Server will display IP address. Use that to connect chatclient to chatserve
+
 ```
 chatclient [server ip] [server port]
 ```
@@ -48,3 +52,7 @@ Can also use Ctrl+C to kill program.
 ## README.md
 
 Readme file for chatclient.c and chatserve.py
+
+## BONUS POINTS
+
+chatclient.c can connect to chatserve.py on any flip server. Address and IP not hardcoded into either program.
