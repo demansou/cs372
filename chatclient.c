@@ -1,3 +1,13 @@
+/********************************************************************************
+ * Name: Daniel Mansour
+ * Creation Date: 07-16-2016
+ * Program Name: chatclient.c
+ * Description: Connects to a socket.
+ *              If connection is established, allows chat between
+ *              client and server. A '\quit' message from either
+ *              client or server will close chat connection.
+ ********************************************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -13,6 +23,7 @@
 // global variable because
 char *userName = NULL;
 
+// gathers server ip and port from command line arguments
 char **connectionAddress(int argc, char *argv[])
 {
 	if(argc != 3)
@@ -27,11 +38,13 @@ char **connectionAddress(int argc, char *argv[])
 	return connection_address;
 }
 
+// returns a socket id
 int socketInit()
 {
 	return socket(AF_INET, SOCK_STREAM, 0);
 }
 
+// connects client to server socket
 void socketConnect(int sockfd, char **connection_address)
 {
 	struct sockaddr_in serv_addr;
@@ -55,6 +68,7 @@ void socketConnect(int sockfd, char **connection_address)
 	return;
 }
 
+// queries user for username. max 12 characters (plus null termination)
 void makeUserName()
 {
 	userName = (char *)calloc(16, sizeof(char));
@@ -68,11 +82,8 @@ void makeUserName()
 	return;
 }
 
-char *getUserName()
-{
-	return userName;
-}
-
+// handshakes server to establish connection
+// sends username and port of client
 void socketHandshake(int sockfd, char **connection_address)
 {
 	size_t messageLength = (size_t)strlen(connection_address[1]) + (size_t)strlen(userName);
@@ -89,6 +100,9 @@ void socketHandshake(int sockfd, char **connection_address)
 	return;
 }
 
+// method which gathers command line args, formats them into server ip and port,
+// creates a client socket, connects to the server ip and port, 
+// requests username from client, and handshakes with server
 int socketOpen(int argc, char *argv[])
 {
 	char **connection_address = (char **)calloc((size_t)2, sizeof(char *));
@@ -112,6 +126,7 @@ int socketOpen(int argc, char *argv[])
 	return sockfd;
 }
 
+// collects incoming data from server and returns message as string
 char *readMessage(int sockfd)
 {
 	char *serverMessage = NULL;
@@ -125,6 +140,7 @@ char *readMessage(int sockfd)
 	return serverMessage;
 }
 
+// collects user input data and writes to server. returns user input
 char *writeMessage(int sockfd)
 {
 	char *clientMessage = NULL;
@@ -148,6 +164,9 @@ char *writeMessage(int sockfd)
 	return clientMessage;
 }
 
+// uses read and write methods to chat with server
+// will loop endlessly until '\quit' is received in chat
+// from either server or client
 void socketConnection(sockfd)
 {
 	char *serverMessage = NULL;
@@ -182,6 +201,7 @@ void socketConnection(sockfd)
 	return;
 }
 
+// establishes socket and holds connection with server
 int main(int argc, char *argv[])
 {
 	int sockfd = socketOpen(argc, argv);

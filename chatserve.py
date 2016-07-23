@@ -1,3 +1,12 @@
+"""
+Name: Daniel Mansour
+Creation Date: 07-16-2016
+Program Name: chatserve.py
+Description: Binds to port and listens for client connection request.
+             If connection is established, allows chat between client
+             and server. If client requests to close connetion with
+             '\quit', server will listen for other connections.
+"""
 import sys
 import socket
 import re
@@ -67,6 +76,10 @@ def socketListen(sock):
 
 
 def getMessage(connection):
+    """
+    Listens for data from client. Collects received client data.
+    Returns client data.
+    """
     client_message = connection.recv(128).decode()
     if not client_message:
         print >> sys.stderr, '[chatserve] ERROR recieving client data...'
@@ -75,6 +88,10 @@ def getMessage(connection):
 
 
 def sendMessage(connection):
+    """
+    Gathers user input to send to client and sends message.
+    Returns user input.
+    """
     user_input = raw_input('SERVER: ')[:120]
     server_message = 'SERVER: ' + user_input
     connection.send(server_message)
@@ -83,7 +100,9 @@ def sendMessage(connection):
 
 def socketConnection(connection):
     """
-    Establishes TCP connection with connection data and client address
+    Holds connection with client. While loop allows exchange of
+    messages between server and client. Will stop looping upon
+    input of '\quit' from server or client
     """
     exit_message = '\quit'
     while True:
