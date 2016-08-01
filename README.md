@@ -1,5 +1,5 @@
 # cs372
-Class work for CS372 Computer Networks
+2-connection client/server network application for text chat
 
 ## chatclient.c
 
